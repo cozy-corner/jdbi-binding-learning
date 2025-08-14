@@ -30,7 +30,7 @@ class JdbiBindingErrorTest {
     @Test
     fun `should throw exception when binding parameter with no placeholders in SQL`() {
         val exception = assertThrows<UnableToCreateStatementException> {
-            executeQuery(showAll = true, scope = SearchScope.WORLDWIDE)
+            executeQuery(SearchScope.WORLDWIDE)
         }
         
         println("Exception: ${exception.message}")
@@ -40,7 +40,7 @@ class JdbiBindingErrorTest {
     @Test
     fun `should not throw exception when SQL has placeholders`() {
         assertDoesNotThrow {
-            executeQuery(showAll = false, scope = SearchScope.COUNTRY_ONLY)
+            executeQuery(SearchScope.COUNTRY_ONLY)
         }
     }
     
@@ -91,9 +91,9 @@ class JdbiBindingErrorTest {
     }
     
     
-    private fun executeQuery(showAll: Boolean, scope: SearchScope) {
+    private fun executeQuery(scope: SearchScope) {
         jdbi.useHandle<Exception> { handle ->
-            val condition = buildCondition(showAll, scope)
+            val condition = buildCondition(scope)
             val sql = buildSql(condition)
             
             // 問題: このパラメータが常にバインドされるが使われない場合がある
@@ -105,12 +105,7 @@ class JdbiBindingErrorTest {
         }
     }
     
-    private fun buildCondition(showAll: Boolean, scope: SearchScope): QueryCondition {
-        // Early return でエラーが発生
-        if (scope == SearchScope.WORLDWIDE && showAll) {
-            return QueryCondition()
-        }
-        
+    private fun buildCondition(scope: SearchScope): QueryCondition {
         return when (scope) {
             SearchScope.COUNTRY_ONLY -> QueryCondition(
                 conditions = listOf("(witness_id = :witnessId OR location_id = :locationId)"),
